@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="gl-py2pyd",
-    version="0.1.1",
+    version="0.2.0",
     author="gu lei",
     author_email="youjunxiaji@gmail.com",
     description="将Python文件转换为pyd/so文件的工具",
@@ -20,10 +20,11 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.9",
     install_requires=[
         "cython",
-        "loguru",
+        "rich",
+        "setuptools",
     ],
     entry_points={
         "console_scripts": [

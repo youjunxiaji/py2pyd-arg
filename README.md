@@ -1,6 +1,6 @@
-# Python转pyd/so工具
+# py2pyd - Python转pyd/so工具
 
-这个工具用于将Python文件(.py)转换为编译后的Python扩展模块(.pyd或.so)，使用Cython进行编译。
+将Python文件(.py)转换为编译后的Python扩展模块(.pyd或.so)，使用Cython进行编译。
 
 ## 功能特点
 
@@ -10,57 +10,61 @@
 - 转换后可选择是否删除原始Python文件
 - 保留`__init__.py`文件内容处理
 - 自动检测依赖并提供错误处理
-- 针对不同操作系统自动选择正确的扩展名（Windows为.pyd，Linux/MacOS为.so）
-- 优化编译选项，消除常见警告信息
+- 针对不同操作系统自动选择正确的扩展名（Windows为.pyd，Linux/macOS为.so）
+- 美观的进度条显示
 
-## 安装依赖
-
-在使用此工具前，请确保已安装以下依赖：
+## 安装
 
 ```bash
-pip install cython loguru
+pip install gl-py2pyd
 ```
 
-此外，你的系统需要有合适的C/C++编译器：
-- Windows: 需要安装Visual C++ Build Tools
-- Linux: 需要安装GCC
-- macOS: 需要安装XCode命令行工具（`xcode-select --install`）
+### 系统要求
+
+你的系统需要有合适的C/C++编译器：
+- **Windows**: 需要安装 Visual C++ Build Tools
+- **Linux**: 需要安装 GCC
+- **macOS**: 需要安装 XCode 命令行工具（`xcode-select --install`）
 
 ## 使用方法
 
-### 1. 转换单个文件
+### 命令行使用
 
 ```bash
-python py2pyd.py path/to/your/file.py
+# 转换单个文件
+py2pyd file.py
+
+# 转换目录下所有Python文件
+py2pyd folder/
+
+# 递归转换目录及其子目录中的所有Python文件
+py2pyd -r folder/
+
+# 转换后删除原始Python文件
+py2pyd --remove file.py
+
+# 组合使用
+py2pyd -r --remove folder/
+
+# 查看版本
+py2pyd -v
+
+# 查看帮助
+py2pyd -h
 ```
 
-### 2. 转换目录下所有Python文件
+### 输出示例
 
-```bash
-python py2pyd.py path/to/your/directory
+```
+📄 处理文件: test.py
+  转换进度 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%
+
+✅ 处理完成！成功: 1 个文件
+
+🎉 全部转换成功！
 ```
 
-### 3. 递归转换目录及其子目录中的所有Python文件
-
-```bash
-python py2pyd.py -r path/to/your/directory
-```
-
-### 4. 转换后删除原始Python文件
-
-```bash
-python py2pyd.py --remove path/to/your/file.py
-```
-
-### 5. 全部选项组合
-
-```bash
-python py2pyd.py -r --remove path/to/your/directory
-```
-
-## 作为模块导入
-
-你也可以在自己的Python代码中导入该模块：
+### 作为模块导入
 
 ```python
 # 转换单个文件
@@ -82,8 +86,8 @@ print(f"成功：{converter.success_count} 个文件，失败：{converter.fail_
 
 工具会自动检测必要的依赖并提供错误信息。常见问题包括：
 
-1. **缺少Cython**: 运行前会检查Cython是否已安装，若未安装则会提示安装。
-2. **编译失败**: 如果编译失败，会提供详细错误信息，可能是缺少编译器或者Python文件内容有问题。
+1. **缺少Cython**: 运行前会检查Cython是否已安装，若未安装则会提示安装
+2. **编译失败**: 可能是缺少编译器或者Python文件内容有问题
 
 ## 优化的编译选项
 
@@ -97,5 +101,9 @@ print(f"成功：{converter.success_count} 个文件，失败：{converter.fail_
 
 - 确保已安装Cython和适当的编译器
 - 转换后的so/pyd文件会保留在原始Python文件的相同目录中
-- 在Windows系统上生成.pyd文件，在Linux/MacOS上生成.so文件
-- 对于复杂的Python项目，可能需要额外的编译选项 
+- 在Windows系统上生成.pyd文件，在Linux/macOS上生成.so文件
+- 对于复杂的Python项目，可能需要额外的编译选项
+
+## License
+
+MIT License

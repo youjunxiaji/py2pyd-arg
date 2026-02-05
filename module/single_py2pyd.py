@@ -9,7 +9,6 @@ import shutil
 import glob
 import subprocess
 import sys
-from loguru import logger
 
 def py2pyd(path):
     """
@@ -17,11 +16,10 @@ def py2pyd(path):
     
     Args:
         path: Python文件路径
-    """
-    logger.info(f"==========================================")
-    logger.info(f"开始处理文件: {path}")
-    logger.info(f"当前工作目录: {os.getcwd()}")
     
+    Returns:
+        bool: 转换是否成功
+    """
     # 保存原始工作目录
     original_dir = os.getcwd()
     try:
@@ -29,8 +27,6 @@ def py2pyd(path):
         try:
             import Cython
         except ImportError:
-            logger.error("缺少必要的依赖: Cython")
-            logger.info("请先安装依赖: pip install cython")
             return False
             
         # 转换为绝对路径
@@ -39,12 +35,8 @@ def py2pyd(path):
         file_path: str = os.path.basename(abs_path)  # 带py的文件名
         filename = file_path.split('.py')[0]  # 不带py的文件名
 
-        logger.info(f"目标文件夹路径: {folder_path}")
-        logger.info(f"文件名: {file_path}")
-
         # 更改工作目录
         os.chdir(folder_path)
-        logger.info(f"切换后的工作目录: {os.getcwd()}")
 
         # 根据系统配置编译参数和链接参数
         extra_compile_args = []
@@ -91,12 +83,11 @@ def py2pyd(path):
             f.write('    )\n')
             f.write(')\n')
 
-        logger.info(f"开始执行 setup.py")
         try:
-            subprocess.check_call(['python', 'setup.py', 'build_ext', '--inplace'])
-        except subprocess.CalledProcessError as e:
-            logger.error(f"执行setup.py失败: {e}")
-            logger.error("请确保已正确安装Cython，并且Python环境中有适当的编译器")
+            # 隐藏编译输出，保持界面简洁
+            subprocess.check_call(['python', 'setup.py', 'build_ext', '--inplace'],
+                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
             # 清理临时文件
             if os.path.exists('setup.py'):
                 os.remove('setup.py')
@@ -106,10 +97,8 @@ def py2pyd(path):
         is_windows = sys.platform.startswith('win')
         extension = '.pyd' if is_windows else '.so'
         output_file = f"{filename}{extension}"
-        logger.info(f"目标文件名: {output_file}")
 
         if os.path.exists(output_file):
-            logger.info(f"删除已存在的文件: {output_file}")
             os.remove(output_file)  # 删除老的文件
 
         # 查找生成的扩展文件
@@ -119,16 +108,11 @@ def py2pyd(path):
             ext_files = glob.glob(filename + "*.so")
             
         if not ext_files:
-            logger.error(f"未找到编译后的文件")
             return False
-            
-        logger.info(f"找到的文件: {ext_files}")
 
         os.rename(ext_files[0], output_file)  # 改名字，删除多余的cp38-win_amd64.等
-        logger.info(f"重命名文件完成")
 
         # 清理临时文件
-        logger.info("开始清理临时文件")
         if os.path.exists('%s.c' % filename):
             os.remove('%s.c' % filename)    # 删除临时文件
         if os.path.exists('build'):
@@ -138,18 +122,14 @@ def py2pyd(path):
         if os.path.exists('__pycache__'):
             shutil.rmtree('__pycache__')  # 删除 __pycache__文件夹
         [os.remove(i) for i in glob.glob("*.ui")]  # 删除ui文件
-        logger.info("清理临时文件完成")
-        logger.info(f"==========================================\n")
+        
         return True
 
-    except Exception as e:
-        logger.error(f"处理文件时发生错误: {e}")
+    except Exception:
         return False
     finally:
         # 恢复原始工作目录
         os.chdir(original_dir)
-        logger.info(f"恢复原始工作目录: {original_dir}")
-        logger.info(f"==========================================\n")
 
 if __name__ == "__main__":
     import argparse
