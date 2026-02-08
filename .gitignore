@@ -6,6 +6,5 @@ build
 dist
 gl_py2pyd.egg-info
 MANIFEST.in
-pyproject.toml
 DEPLOY.md
 py2pyd_arg.egg-info/

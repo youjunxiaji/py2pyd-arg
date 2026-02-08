@@ -1,0 +1,31 @@
+[project]
+name = "gl-py2pyd"
+version = "0.2.0"
+description = "将Python文件转换为pyd/so文件的工具"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "cython",
+    "rich",
+    "setuptools",
+]
+
+[project.scripts]
+py2pyd = "py2pyd:main"
+
+[dependency-groups]
+dev = [
+    "build>=1.4.0",
+    "pyinstaller>=6.0.0",
+    "twine>=6.2.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["module*"]
+
+[tool.setuptools]
+py-modules = ["py2pyd"]
