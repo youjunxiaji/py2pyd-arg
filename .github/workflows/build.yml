@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   build:
@@ -37,7 +38,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pyinstaller cython rich setuptools
+          pip install pyinstaller cython InquirerPy rich setuptools
 
       - name: Build with PyInstaller
         run: |
@@ -82,3 +83,27 @@ jobs:
             artifacts/py2pyd-linux-x64/py2pyd-linux-x64
             artifacts/py2pyd-windows-x64.exe/py2pyd-windows-x64.exe
             artifacts/py2pyd-macos-arm64/py2pyd-macos-arm64
+
+  publish-pypi:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    environment: pypi
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

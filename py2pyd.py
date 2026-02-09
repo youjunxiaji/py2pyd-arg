@@ -11,8 +11,9 @@ import sys
 import argparse
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+from InquirerPy.resolver import prompt as inquirer_prompt
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 console = Console()
 
@@ -64,12 +65,14 @@ def main():
                 "  py2pyd file.py              转换单个文件\n"
                 "  py2pyd folder/              转换目录下的文件\n"
                 "  py2pyd -r folder/           递归转换目录\n"
-                "  py2pyd --remove file.py     转换后删除原文件",
+                "  py2pyd -d file.py           转换后删除原文件\n"
+                "  py2pyd -d --no-confirm file.py  删除且跳过确认",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("path", nargs='?', help="要转换的Python文件或目录路径")
     parser.add_argument("-r", "--recursive", action="store_true", help="递归处理目录")
-    parser.add_argument("--remove", action="store_true", help="转换后删除原始.py文件")
+    parser.add_argument("-d", "--delete", action="store_true", help="转换后删除原始.py文件")
+    parser.add_argument("--no-confirm", action="store_true", help="跳过删除确认提示（与 -d 配合使用）")
     parser.add_argument("-v", "--version", action="version", version=f"py2pyd {__version__}")
     
     args = parser.parse_args()
@@ -84,9 +87,14 @@ def main():
         sys.exit(1)
     
     # 删除确认
-    if args.remove:
-        confirm = input("⚠️  警告: --remove 选项将会删除所有py源文件，是否继续? (y/n): ")
-        if confirm.lower() != 'y':
+    if args.delete and not args.no_confirm:
+        result = inquirer_prompt([{
+            "type": "list",
+            "message": "⚠️  警告: -d 选项将会删除所有py源文件，是否继续?",
+            "choices": ["否", "是"],
+            "default": "否",
+        }])
+        if result[0] == "否":
             console.print("操作已取消")
             sys.exit(0)
     
@@ -106,14 +114,14 @@ def main():
             console.print(f"❌ [bold red]不是Python文件: {path}[/bold red]")
             sys.exit(1)
         console.print(f"📄 处理文件: [cyan]{path}[/cyan]")
-        success_count, fail_count, failed_files = process_files([path], args.remove)
+        success_count, fail_count, failed_files = process_files([path], args.delete)
         
     elif os.path.isdir(path):
         # 处理目录
         if args.recursive:
             console.print(f"📁 递归处理目录: [cyan]{path}[/cyan]")
             converter = FileConversion()
-            success = converter.get_all_file(path, args.remove)
+            success = converter.get_all_file(path, args.delete)
             if success:
                 console.print("\n🎉 [bold green]全部转换成功！[/bold green]")
             else:
@@ -130,7 +138,7 @@ def main():
                 console.print("⚠️  [yellow]目录中没有找到 .py 文件[/yellow]")
                 sys.exit(0)
             
-            success_count, fail_count, failed_files = process_files(py_files, args.remove)
+            success_count, fail_count, failed_files = process_files(py_files, args.delete)
     
     # 显示结果
     console.print()

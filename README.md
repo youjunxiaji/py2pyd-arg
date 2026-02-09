@@ -7,10 +7,11 @@
 - 支持单个Python文件的转换
 - 支持目录批量转换
 - 支持递归处理子目录
-- 转换后可选择是否删除原始Python文件
+- 转换后可选择是否删除原始Python文件（交互式确认）
 - 保留`__init__.py`文件内容处理
 - 自动检测依赖并提供错误处理
 - 针对不同操作系统自动选择正确的扩展名（Windows为.pyd，Linux/macOS为.so）
+- 编译后保留带 ABI 标签的原始文件名（如 `module.cpython-311-darwin.so`）
 - 美观的进度条显示
 
 ## 安装
@@ -40,11 +41,14 @@ py2pyd folder/
 # 递归转换目录及其子目录中的所有Python文件
 py2pyd -r folder/
 
-# 转换后删除原始Python文件
-py2pyd --remove file.py
+# 转换后删除原始Python文件（会弹出交互式确认菜单）
+py2pyd -d file.py
+
+# 删除且跳过确认提示（适用于 CI/CD 或脚本自动化）
+py2pyd -d --no-confirm file.py
 
 # 组合使用
-py2pyd -r --remove folder/
+py2pyd -r -d folder/
 
 # 查看版本
 py2pyd -v
@@ -63,6 +67,16 @@ py2pyd -h
 
 🎉 全部转换成功！
 ```
+
+### 关于编译后的文件名
+
+编译后的文件会保留带有 Python 版本和平台信息的 ABI 标签，例如：
+
+- `module.cpython-311-darwin.so`（macOS, Python 3.11）
+- `module.cpython-311-x86_64-linux-gnu.so`（Linux, Python 3.11）
+- `module.cp311-win_amd64.pyd`（Windows, Python 3.11）
+
+> **注意**: 编译后的扩展模块只能在对应的 Python 版本上使用。例如用 Python 3.11 编译的模块无法在 Python 3.10 或 3.12 上加载。
 
 ### 作为模块导入
 
@@ -102,6 +116,7 @@ print(f"成功：{converter.success_count} 个文件，失败：{converter.fail_
 - 确保已安装Cython和适当的编译器
 - 转换后的so/pyd文件会保留在原始Python文件的相同目录中
 - 在Windows系统上生成.pyd文件，在Linux/macOS上生成.so文件
+- 编译后的模块绑定特定 Python 版本，不同版本间不兼容
 - 对于复杂的Python项目，可能需要额外的编译选项
 
 ## License
