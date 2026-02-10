@@ -89,7 +89,7 @@ def py2pyd(path):
         try:
             # 捕获编译输出，失败时可以查看错误信息
             result = subprocess.run(
-                ['python', 'setup.py', 'build_ext', '--inplace'],
+                [sys.executable, 'setup.py', 'build_ext', '--inplace'],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True
