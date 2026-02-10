@@ -53,14 +53,14 @@ class FileConversion:
                     self.process_init_py(dir_path)
                     init_py_dirs.remove(dir_path)
                 
-                success = py2pyd(file_path)
+                success, error_msg = py2pyd(file_path)
                 if success:
                     self.success_count += 1
                     if need_remove:
                         os.remove(file_path)
                 else:
                     self.fail_count += 1
-                    self.failed_files.append(file_path)
+                    self.failed_files.append((file_path, error_msg))
                 
                 # 恢复 __init__.py
                 if self.initpy and dir_path not in init_py_dirs:
@@ -75,8 +75,12 @@ class FileConversion:
         else:
             console.print(f"⚠️  [yellow]处理完成！成功: {self.success_count} 个文件，失败: {self.fail_count} 个文件[/yellow]")
             console.print("[red]失败的文件:[/red]")
-            for f in self.failed_files:
-                console.print(f"   - {f}")
+            for file_path, error_msg in self.failed_files:
+                console.print(f"   - {file_path}")
+                if error_msg:
+                    # 缩进显示错误信息，多行错误也正确缩进
+                    for line in error_msg.split('\n'):
+                        console.print(f"     [dim]{line}[/dim]")
         
         return self.success_count > 0 and self.fail_count == 0
 

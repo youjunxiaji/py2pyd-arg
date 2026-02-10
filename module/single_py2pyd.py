@@ -19,7 +19,9 @@ def py2pyd(path):
         path: Python文件路径
 
     Returns:
-        bool: 转换是否成功
+        tuple: (success: bool, error_msg: str | None)
+            成功时返回 (True, None)
+            失败时返回 (False, "错误原因")
     """
     # 保存原始工作目录
     original_dir = os.getcwd()
@@ -28,7 +30,7 @@ def py2pyd(path):
         try:
             import Cython
         except ImportError:
-            return False
+            return False, "缺少 Cython 依赖，请先安装: pip install cython"
 
         # 转换为绝对路径
         abs_path = os.path.abspath(path)
@@ -85,17 +87,25 @@ def py2pyd(path):
             f.write(')\n')
 
         try:
-            # 隐藏编译输出，保持界面简洁
-            subprocess.check_call(
+            # 捕获编译输出，失败时可以查看错误信息
+            result = subprocess.run(
                 ['python', 'setup.py', 'build_ext', '--inplace'],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
             )
-        except subprocess.CalledProcessError:
+            if result.returncode != 0:
+                # 清理临时文件
+                if os.path.exists('setup.py'):
+                    os.remove('setup.py')
+                # 提取有用的错误信息
+                error_output = result.stderr.strip() or result.stdout.strip()
+                return False, f"编译失败:\n{error_output}" if error_output else "编译失败: 未知错误"
+        except subprocess.CalledProcessError as e:
             # 清理临时文件
             if os.path.exists('setup.py'):
                 os.remove('setup.py')
-            return False
+            return False, f"编译进程异常: {str(e)}"
 
         # 查找生成的扩展文件（保留带 ABI 标签的原始文件名，如 module.cpython-311-darwin.so）
         is_windows = sys.platform.startswith('win')
@@ -105,7 +115,7 @@ def py2pyd(path):
             ext_files = glob.glob(filename + "*.so")
 
         if not ext_files:
-            return False
+            return False, "编译完成但未找到生成的扩展文件(.pyd/.so)"
 
         # 清理临时文件
         if os.path.exists('%s.c' % filename):
@@ -118,10 +128,10 @@ def py2pyd(path):
             shutil.rmtree('__pycache__')  # 删除 __pycache__文件夹
         [os.remove(i) for i in glob.glob("*.ui")]  # 删除ui文件
 
-        return True
+        return True, None
 
-    except Exception:
-        return False
+    except Exception as e:
+        return False, f"未知异常: {str(e)}"
     finally:
         # 恢复原始工作目录
         os.chdir(original_dir)

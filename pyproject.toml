@@ -1,6 +1,6 @@
 [project]
 name = "gl-py2pyd"
-version = "0.3.0"
+version = "0.3.1"
 description = "将Python文件转换为pyd/so文件的工具"
 readme = "README.md"
 requires-python = ">=3.9"

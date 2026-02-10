@@ -13,7 +13,7 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 from InquirerPy.resolver import prompt as inquirer_prompt
 
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 console = Console()
 
@@ -46,14 +46,14 @@ def process_files(files, need_remove=False, desc="转换进度"):
         task = progress.add_task(desc, total=len(files))
         
         for file_path in files:
-            success = py2pyd(file_path)
+            success, error_msg = py2pyd(file_path)
             if success:
                 success_count += 1
                 if need_remove:
                     os.remove(file_path)
             else:
                 fail_count += 1
-                failed_files.append(file_path)
+                failed_files.append((file_path, error_msg))
             progress.update(task, advance=1)
     
     return success_count, fail_count, failed_files
@@ -147,8 +147,12 @@ def main():
     else:
         console.print(f"⚠️  [yellow]处理完成！成功: {success_count} 个文件，失败: {fail_count} 个文件[/yellow]")
         console.print("[red]失败的文件:[/red]")
-        for f in failed_files:
-            console.print(f"   - {f}")
+        for file_path, error_msg in failed_files:
+            console.print(f"   - {file_path}")
+            if error_msg:
+                # 缩进显示错误信息，多行错误也正确缩进
+                for line in error_msg.split('\n'):
+                    console.print(f"     [dim]{line}[/dim]")
     
     if fail_count == 0:
         console.print("\n🎉 [bold green]全部转换成功！[/bold green]")
